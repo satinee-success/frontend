@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     optimizeDeps: { include: ['jwt-decode', '@vue/devtools-core'] }
   },
   runtimeConfig: {
-    public: { apiBase: 'http://localhost:4000/api' }
+    public: { apiBase: 'http://localhost:4000' }
   },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true }

@@ -10,7 +10,7 @@ const loading = ref(false)
 
 function validate() {
   errors.username = form.username.trim() ? '' : 'กรุณากรอกชื่อผู้ใช้'
-  errors.password = form.password.length >= 4 ? '' : 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'
+  errors.password = form.password ? '' : 'กรุณากรอกรหัสผ่าน'
   return !errors.username && !errors.password
 }
 
@@ -19,13 +19,13 @@ async function submit() {
   if (!validate()) return
   loading.value = true
   try {
-    const res = await $fetch<{ data: { token: string } }>('/auth/login', {
+    const res: any = await $fetch('/login', {
       baseURL: config.public.apiBase,
       method: 'POST',
       body: form
     })
-    auth.token = res.data.token
-    await navigateTo(auth.user?.role === 'admin' ? '/users' : '/scores')
+    auth.token = res.access_token
+    await navigateTo('/')
   } catch (e: any) {
     serverError.value = e?.data?.message || 'เข้าสู่ระบบไม่สำเร็จ'
   } finally {
