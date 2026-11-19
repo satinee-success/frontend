@@ -1,15 +1,14 @@
 <script setup lang="ts">
 definePageMeta({ roles: ['admin'] }) // เฉพาะผู้ดูแลระบบ
 
-type User = { id: number; username: string; full_name: string; role: string }
+type User = { id: number; username: string; full_name: string; phone: string | null; role: string }
 const api = useApi()
 const roleFilter = ref('')
 const { items, page, search, errorMsg, totalPages, load } = useList<User>('/users', () => ({ role: roleFilter.value || undefined }))
-const roleLabel: Record<string, string> = { admin: 'ผู้ดูแลระบบ', user1: 'ครู', user2: 'นักเรียน' }
 
 const showForm = ref(false)
 const editingId = ref<number | null>(null)
-const form = reactive({ username: '', password: '', full_name: '', role: 'user2' })
+const form = reactive({ username: '', password: '', full_name: '', phone: '', role: 'user' })
 const formErrors = reactive<Record<string, string>>({})
 const formServerError = ref('')
 
@@ -18,13 +17,13 @@ const deleting = ref<User | null>(null)
 
 function openCreate() {
   editingId.value = null
-  Object.assign(form, { username: '', password: '', full_name: '', role: 'user2' })
+  Object.assign(form, { username: '', password: '', full_name: '', phone: '', role: 'user' })
   formServerError.value = ''
   showForm.value = true
 }
 function openEdit(u: User) {
   editingId.value = u.id
-  Object.assign(form, { username: u.username, password: '', full_name: u.full_name, role: u.role })
+  Object.assign(form, { username: u.username, password: '', full_name: u.full_name, phone: u.phone ?? '', role: u.role })
   formServerError.value = ''
   showForm.value = true
 }
@@ -32,7 +31,8 @@ function validate() {
   formErrors.username = editingId.value || /^[a-zA-Z0-9_]{3,50}$/.test(form.username) ? '' : 'a-z, 0-9, _ ยาว 3-50 ตัว'
   formErrors.password = (!editingId.value || form.password) && form.password.length < 4 ? 'รหัสผ่านอย่างน้อย 4 ตัวอักษร' : ''
   formErrors.full_name = form.full_name.trim() ? '' : 'กรุณากรอกชื่อ-นามสกุล'
-  return !formErrors.username && !formErrors.password && !formErrors.full_name
+  formErrors.phone = !form.phone || /^[0-9-]{9,20}$/.test(form.phone) ? '' : 'เบอร์โทรไม่ถูกต้อง'
+  return !formErrors.username && !formErrors.password && !formErrors.full_name && !formErrors.phone
 }
 async function save() {
   formServerError.value = ''
@@ -75,18 +75,19 @@ async function doDelete() {
 
     <div class="bg-white rounded-xl shadow overflow-x-auto">
       <table class="w-full text-left">
-        <thead class="bg-slate-100"><tr><th class="p-3">Username</th><th class="p-3">ชื่อ-นามสกุล</th><th class="p-3">สิทธิ์</th><th class="p-3" /></tr></thead>
+        <thead class="bg-slate-100"><tr><th class="p-3">Username</th><th class="p-3">ชื่อ-นามสกุล</th><th class="p-3">เบอร์โทร</th><th class="p-3">สิทธิ์</th><th class="p-3" /></tr></thead>
         <tbody>
           <tr v-for="u in items" :key="u.id" class="border-t">
             <td class="p-3">{{ u.username }}</td>
             <td class="p-3">{{ u.full_name }}</td>
+            <td class="p-3">{{ u.phone || '-' }}</td>
             <td class="p-3">{{ roleLabel[u.role] }}</td>
             <td class="p-3 text-right space-x-2">
               <button class="text-amber-600" @click="openEdit(u)">แก้ไข</button>
               <button class="text-red-600" @click="askDelete(u)">ลบ</button>
             </td>
           </tr>
-          <tr v-if="!items.length"><td colspan="4" class="p-6 text-center text-slate-400">ไม่พบข้อมูล</td></tr>
+          <tr v-if="!items.length"><td colspan="5" class="p-6 text-center text-slate-400">ไม่พบข้อมูล</td></tr>
         </tbody>
       </table>
     </div>
@@ -108,6 +109,10 @@ async function doDelete() {
         <div>
           <input v-model="form.full_name" placeholder="ชื่อ-นามสกุล" class="w-full border rounded px-3 py-2" />
           <p class="text-red-500 text-sm">{{ formErrors.full_name }}</p>
+        </div>
+        <div>
+          <input v-model="form.phone" placeholder="เบอร์โทร (ไม่บังคับ)" class="w-full border rounded px-3 py-2" />
+          <p class="text-red-500 text-sm">{{ formErrors.phone }}</p>
         </div>
         <select v-model="form.role" class="w-full border rounded px-3 py-2">
           <option v-for="(l, k) in roleLabel" :key="k" :value="k">{{ l }}</option>

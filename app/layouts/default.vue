@@ -2,15 +2,13 @@
 const auth = useAuthStore()
 const open = ref(false)
 
-const roleLabel: Record<string, string> = { admin: 'ผู้ดูแลระบบ', user1: 'ครู', user2: 'นักเรียน' }
-
 // เมนูเปลี่ยนตามสิทธิ์
 const menus = computed(() => {
   const role = auth.user?.role
   const list = [{ label: 'หน้าหลัก', to: '/' }]
-  if (role === 'admin') list.push({ label: 'ผู้ใช้', to: '/users' })
-  list.push({ label: 'วิชา', to: '/subjects' })
-  list.push({ label: role === 'user2' ? 'คะแนนของฉัน' : 'คะแนน', to: '/scores' })
+  if (role === 'admin') list.push({ label: 'งานแจ้งซ่อม', to: '/requests' }, { label: 'ผู้ใช้', to: '/users' }, { label: 'หมวดหมู่', to: '/categories' })
+  else if (role === 'technician') list.push({ label: 'งานของฉัน', to: '/requests' })
+  else list.push({ label: 'แจ้งซ่อมของฉัน', to: '/requests' })
   return list
 })
 
@@ -24,7 +22,7 @@ function logout() {
   <div class="min-h-screen bg-slate-50">
     <header class="bg-indigo-600 text-white">
       <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <span class="font-bold">ระบบจัดการคะแนน</span>
+        <span class="font-bold">ระบบแจ้งซ่อม</span>
         <button class="md:hidden text-2xl" @click="open = !open">☰</button>
         <nav class="hidden md:flex items-center gap-4">
           <NuxtLink v-for="m in menus" :key="m.to" :to="m.to" class="hover:underline" active-class="font-bold underline">{{ m.label }}</NuxtLink>
